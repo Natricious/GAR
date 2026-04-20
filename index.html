@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Weekly Points Calculator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f4f0;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    color: #1a1a1a;
+  }
+  .app { max-width: 720px; margin: 0 auto; }
+  .day-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .tab-btn {
+    padding: 6px 14px; font-size: 13px; font-weight: 500;
+    border: 0.5px solid #c0beb8;
+    border-radius: 8px;
+    background: #fff;
+    color: #666;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .tab-btn:hover { background: #f0efe9; color: #1a1a1a; }
+  .tab-btn.active { background: #3C3489; border-color: #3C3489; color: #EEEDFE; }
+  .day-panel { display: none; background: #fff; border-radius: 12px; border: 0.5px solid #dddbd4; padding: 1rem 1.25rem; }
+  .day-panel.active { display: block; }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem; padding-bottom: 0.75rem;
+    border-bottom: 0.5px solid #e8e6df;
+  }
+  .panel-title { font-size: 15px; font-weight: 500; color: #1a1a1a; }
+  .panel-subtitle { font-size: 12px; color: #888; margin-top: 2px; }
+  .panel-total { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 500; color: #534AB7; }
+  .coin {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #FAC775; border: 2px solid #EF9F27;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700; color: #633806; flex-shrink: 0;
+  }
+  .task-row {
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center;
+    gap: 10px; padding: 9px 0;
+    border-bottom: 0.5px solid #e8e6df;
+  }
+  .task-row:last-of-type { border-bottom: none; }
+  .task-name { font-size: 13px; color: #1a1a1a; line-height: 1.4; }
+  .task-pts { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #888; white-space: nowrap; }
+  .task-pts .coin { width: 14px; height: 14px; font-size: 7px; }
+  .task-input-wrap { display: flex; align-items: center; gap: 7px; }
+  .task-input {
+    width: 80px; padding: 4px 6px; font-size: 13px; text-align: center;
+    border: 0.5px solid #c0beb8; border-radius: 8px;
+    background: #fff; color: #1a1a1a;
+  }
+  .task-input:focus { outline: none; box-shadow: 0 0 0 2px #AFA9EC; }
+  .task-earned { font-size: 12px; font-weight: 500; color: #534AB7; min-width: 36px; text-align: right; }
+  .pts-note { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .input-hint { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .grand-total-row {
+    display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+    margin-top: 0.75rem; padding-top: 0.75rem;
+    border-top: 0.5px solid #c0beb8;
+  }
+  .grand-val { font-size: 18px; font-weight: 500; color: #3C3489; }
+  .grand-label { font-size: 12px; color: #888; }
+  .all-total-bar {
+    margin-top: 1.25rem; padding: 0.75rem 1rem;
+    background: #eeedf6;
+    border-radius: 12px;
+    border: 0.5px solid #c8c5e8;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .all-label { font-size: 13px; color: #555; }
+  .all-val { font-size: 18px; font-weight: 500; color: #3C3489; display: flex; align-items: center; gap: 6px; }
+
+  @media (max-width: 480px) {
+    .task-row { grid-template-columns: 1fr auto; }
+    .task-pts { display: none; }
+    .task-input { width: 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Weekly Points Calculator</h1>
+  <div class="day-tabs" id="tabs"></div>
+  <div id="panels"></div>
+  <div class="all-total-bar">
+    <span class="all-label">Weekly Total</span>
+    <span class="all-val"><span class="coin">★</span><span id="weekTotal">0</span> pts</span>
+  </div>
+</div>
+
+<script>
+const days = [
+  { label: "Day 1", name: "Territory Revival", tasks: [
+    { name: "Buy 1 Diamonds from Packs", pts: 10 },
+    { name: "Boost Facility Power by 1 pt", pts: 40 },
+    { name: "Use Construction Speed-up (mins)", pts: 30 },
+    { name: "Use Timber", pts: 1, divisor: 400, hint: "enter total Timber" },
+    { name: "Use Stone", pts: 1, divisor: 400, hint: "enter total Stone" },
+    { name: "Use Rubies", pts: 1, divisor: 200, hint: "enter total Rubies" },
+    { name: "Consume Relic Shards", pts: 200, note: "200/1000/5000" },
+    { name: "Consume Magic Stones", pts: 600, divisor: 2000, hint: "enter total Magic Stones" },
+    { name: "Consume Arcane Crystals", pts: 1200 },
+    { name: "Use Dragon Essence", pts: 3200 },
+    { name: "Summon relic in tavern", pts: 1500 },
+  ]},
+  { label: "Day 2", name: "Tech Boost", tasks: [
+    { name: "Buy 1 Diamonds from Packs", pts: 10 },
+    { name: "Boost Research Power by 1 pt", pts: 40 },
+    { name: "Use Research Speed-up (mins)", pts: 30 },
+    { name: "Use Timber", pts: 1, divisor: 400, hint: "enter total Timber" },
+    { name: "Use Stone", pts: 1, divisor: 400, hint: "enter total Stone" },
+    { name: "Use Rubies", pts: 1, divisor: 200, hint: "enter total Rubies" },
+    { name: "Consume Relic Shards", pts: 200, note: "200/1000/5000" },
+    { name: "Consume Magic Stones", pts: 600, divisor: 2000, hint: "enter total Magic Stones" },
+    { name: "Consume Arcane Crystals", pts: 1200 },
+    { name: "Use Dragon Essence", pts: 3200 },
+    { name: "Summon relic in tavern", pts: 1500 },
+  ]},
+  { label: "Day 3", name: "Global Battles", tasks: [
+    { name: "Buy 1 Diamonds from Packs", pts: 40 },
+    { name: "Gather Stones", pts: 1, divisor: 2, hint: "enter total Stones gathered" },
+    { name: "Gather Wood", pts: 1, divisor: 2, hint: "enter total Wood gathered" },
+    { name: "Gather Rubies", pts: 1, hint: "enter total Rubies gathered" },
+    { name: "Kill level 1-30 mobs on the world map", pts: 40, note: "40–1200" },
+    { name: "Complete 1 Bounty Quest", pts: 2000 },
+    { name: "Kill 1-11 bosses on the world map", pts: 400, note: "400–4000" },
+    { name: "Help in a rally", pts: 100 },
+    { name: "Use Refined Metal", pts: 400, divisor: 100, hint: "enter total Refined Metal" },
+    { name: "Use Magic Thread", pts: 400 },
+    { name: "Use Orichalcum", pts: 600 },
+  ]},
+  { label: "Day 4", name: "Call of the Hero", tasks: [
+    { name: "Buy 1 Diamonds from Packs", pts: 40 },
+    { name: "Recruit hero in the tavern", pts: 1500 },
+    { name: "Consume Hero Shards", pts: 1000, note: "1000/4000/4000" },
+    { name: "Use Refined Metal", pts: 400, divisor: 100, hint: "enter total Refined Metal" },
+    { name: "Use Magic Thread", pts: 400 },
+    { name: "Use Orichalcum", pts: 600 },
+  ]},
+  { label: "Day 5", name: "Combat Ready", tasks: [
+    { name: "Buy 1 Diamonds from Packs", pts: 40 },
+    { name: "Consume pet food", pts: 960, divisor: 100, hint: "enter total pet food" },
+    { name: "Use Training Speed-Up (mins)", pts: 30 },
+    { name: "Complete the training of Soldiers", pts: 40, note: "40–450" },
+  ]},
+  { label: "Day 6", name: "Invincible Warrior", tasks: [
+    { name: "Buy 1 Diamonds from Packs", pts: 10 },
+    { name: "Win 1 battle in Fort Contest", pts: 50000 },
+    { name: "Lost 1 battle in Fort Contest", pts: 10000 },
+    { name: "Use Healing Speed-up (mins)", pts: 30 },
+    { name: "Heal soldiers", pts: 4, note: "4–40" },
+    { name: "Kill level 1-10 soldiers", pts: 1 },
+    { name: "Kill level 1-10 soldiers of the hostile guild", pts: 1, note: "1–7" },
+    { name: "Kill level 1-11 soldiers in Fort Contest", pts: 3, note: "3–21" },
+  ]},
+];
+
+const state = days.map(d => d.tasks.map(() => 0));
+
+function earnedPts(d, t, rawVal) {
+  const task = days[d].tasks[t];
+  return Math.floor(rawVal / (task.divisor || 1)) * task.pts;
+}
+function calcDayTotal(d) {
+  return state[d].reduce((s, raw, i) => s + earnedPts(d, i, raw), 0);
+}
+function calcWeekTotal() {
+  return state.reduce((s, _, d) => s + calcDayTotal(d), 0);
+}
+function updateAll(d) {
+  const el = document.getElementById('dayTotal-' + d);
+  if (el) el.textContent = calcDayTotal(d).toLocaleString();
+  document.getElementById('weekTotal').textContent = calcWeekTotal().toLocaleString();
+}
+
+const tabsEl = document.getElementById('tabs');
+const panelsEl = document.getElementById('panels');
+
+days.forEach((day, d) => {
+  const btn = document.createElement('button');
+  btn.className = 'tab-btn' + (d === 0 ? ' active' : '');
+  btn.textContent = day.label;
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + d).classList.add('active');
+  };
+  tabsEl.appendChild(btn);
+
+  const panel = document.createElement('div');
+  panel.className = 'day-panel' + (d === 0 ? ' active' : '');
+  panel.id = 'panel-' + d;
+
+  const header = document.createElement('div');
+  header.className = 'panel-header';
+  header.innerHTML = `<div><div class="panel-title">${day.label}</div><div class="panel-subtitle">${day.name}</div></div><span class="panel-total"><span class="coin">★</span><span id="dayTotal-${d}">0</span> pts</span>`;
+  panel.appendChild(header);
+
+  day.tasks.forEach((task, t) => {
+    const div = task.divisor || 1;
+    const ptsLabel = div > 1 ? `${task.pts} per ${div}` : task.pts.toLocaleString();
+    const row = document.createElement('div');
+    row.className = 'task-row';
+    row.innerHTML = `
+      <div>
+        <div class="task-name">${task.name}</div>
+        ${task.note ? `<div class="pts-note">pts: ${task.note}</div>` : ''}
+        ${task.hint ? `<div class="input-hint">${task.hint}</div>` : ''}
+      </div>
+      <span class="task-pts"><span class="coin">★</span>${ptsLabel}</span>
+      <div class="task-input-wrap">
+        <input type="number" min="0" class="task-input" value="0" id="inp-${d}-${t}" />
+        <span class="task-earned" id="earn-${d}-${t}">0</span>
+      </div>`;
+    panel.appendChild(row);
+
+    setTimeout(() => {
+      const inp = document.getElementById(`inp-${d}-${t}`);
+      if (!inp) return;
+      inp.addEventListener('focus', () => { if (inp.value === '0') inp.value = ''; });
+      inp.addEventListener('blur', () => { if (inp.value === '') inp.value = '0'; });
+      inp.addEventListener('input', () => {
+        const v = Math.max(0, parseInt(inp.value) || 0);
+        state[d][t] = v;
+        document.getElementById(`earn-${d}-${t}`).textContent = earnedPts(d, t, v).toLocaleString();
+        updateAll(d);
+      });
+    }, 0);
+  });
+
+  const gr = document.createElement('div');
+  gr.className = 'grand-total-row';
+  gr.innerHTML = `<span class="grand-label">Day total</span><span class="grand-val" id="grandTotal-${d}">0 pts</span>`;
+  panel.appendChild(gr);
+
+  setTimeout(() => {
+    const src = document.getElementById('dayTotal-' + d);
+    const dst = document.getElementById('grandTotal-' + d);
+    if (!src || !dst) return;
+    new MutationObserver(() => { dst.textContent = src.textContent + ' pts'; })
+      .observe(src, { childList: true, characterData: true, subtree: true });
+  }, 150);
+
+  panelsEl.appendChild(panel);
+});
+</script>
+</body>
+</html>
