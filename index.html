@@ -317,6 +317,16 @@ body {
 const mobLevels    = Array.from({length:30},(_,i)=>({label:`Lvl ${i+1}`,pts:40+i*40}));
 const bossLevels   = Array.from({length:11},(_,i)=>({label:`Lvl ${i+1}`,pts:Math.round(400+i*360)}));
 const soldierLevels= [...Array.from({length:10},(_,i)=>({label:`Lvl ${i+1}`,pts:40+i*40})),{label:'Lvl 11',pts:450}];
+const relicShardTiers = [
+  {label:'🔵 Blue',pts:200},
+  {label:'🟣 Purple',pts:1000},
+  {label:'🟡 Gold',pts:5000},
+];
+const heroShardTiers = [
+  {label:'🟣 Purple',pts:1000},
+  {label:'⚔️ Legendary',pts:4000},
+  {label:'💎 Mythic',pts:4000},
+];
 
 const days=[
   {label:"Day 1",name:"Territory Revival",tasks:[
@@ -326,7 +336,7 @@ const days=[
     {name:"Use Timber",pts:1,divisor:400,hint:"enter total Timber"},
     {name:"Use Stone",pts:1,divisor:400,hint:"enter total Stone"},
     {name:"Use Rubies",pts:1,divisor:200,hint:"enter total Rubies"},
-    {name:"Consume Relic Shards",pts:200,note:"200 / 1000 / 5000 pts"},
+    {name:"Consume Relic Shards",type:"levelSelect",levels:relicShardTiers,note:"Blue=200 · Purple=1,000 · Gold=5,000 pts"},
     {name:"Consume Magic Stones",pts:600,divisor:2000,hint:"enter total Magic Stones"},
     {name:"Consume Arcane Crystals",pts:1200},
     {name:"Use Dragon Essence",pts:3200},
@@ -339,7 +349,7 @@ const days=[
     {name:"Use Timber",pts:1,divisor:400,hint:"enter total Timber"},
     {name:"Use Stone",pts:1,divisor:400,hint:"enter total Stone"},
     {name:"Use Rubies",pts:1,divisor:200,hint:"enter total Rubies"},
-    {name:"Consume Relic Shards",pts:200,note:"200 / 1000 / 5000 pts"},
+    {name:"Consume Relic Shards",type:"levelSelect",levels:relicShardTiers,note:"Blue=200 · Purple=1,000 · Gold=5,000 pts"},
     {name:"Consume Magic Stones",pts:600,divisor:2000,hint:"enter total Magic Stones"},
     {name:"Consume Arcane Crystals",pts:1200},
     {name:"Use Dragon Essence",pts:3200},
@@ -361,7 +371,7 @@ const days=[
   {label:"Day 4",name:"Call of the Hero",tasks:[
     {name:"Buy 1 Diamonds from Packs",pts:40},
     {name:"Recruit hero in the tavern",pts:1500},
-    {name:"Consume Hero Shards",pts:1000,note:"1000 / 4000 / 4000 pts"},
+    {name:"Consume Hero Shards",type:"levelSelect",levels:heroShardTiers,note:"Purple=1,000 · Legendary=4,000 · Mythic=4,000 pts"},
     {name:"Use Refined Metal",pts:400,divisor:100,hint:"enter total Refined Metal"},
     {name:"Use Magic Thread",pts:400},
     {name:"Use Orichalcum",pts:600},
